@@ -61,6 +61,7 @@ cat >/tmp/kubeadm.yaml <<EOF
 ---
 apiVersion: kubeadm.k8s.io/v1alpha1
 kind: MasterConfiguration
+nodeName: $FULL_HOSTNAME
 token: $KUBEADM_TOKEN
 tokenTTL: 0
 cloudProvider: aws
@@ -71,7 +72,7 @@ apiServerCertSANs:
 EOF
 
 kubeadm reset
-kubeadm init --config /tmp/kubeadm.yaml --node-name $FULL_HOSTNAME
+kubeadm init --config /tmp/kubeadm.yaml
 rm /tmp/kubeadm.yaml
 
 # Use the local kubectl config for further kubectl operations
