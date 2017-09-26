@@ -1,4 +1,11 @@
 #####
+# Generate kubeadm token
+#####
+module "kubeadm-token" {
+  source = "github.com/scholzj/terraform-kubeadm-token"
+}
+
+#####
 # Security Group
 #####
 
@@ -90,7 +97,7 @@ data "template_file" "init_minikube" {
   template = "${file("${path.module}/scripts/init-aws-minikube.sh")}"
 
   vars {
-    kubeadm_token = "${data.template_file.kubeadm_token.rendered}"
+    kubeadm_token = "${module.kubeadm-token.token}"
     dns_name = "${var.cluster_name}.${var.hosted_zone}"
     ip_address = "${aws_eip.minikube.public_ip}"
     cluster_name = "${var.cluster_name}"
@@ -218,20 +225,4 @@ resource "aws_route53_record" "minikube" {
   type    = "A"
   records = ["${aws_eip.minikube.public_ip}"]
   ttl     = 300
-}
-
-#####
-# Output
-#####
-
-output "minikube_dns" {
-    value = "${aws_route53_record.minikube.fqdn}"
-}
-
-output "copy_config_dns" {
-    value = "To copy the kubectl config file using DNS record, run: 'scp centos@${aws_route53_record.minikube.fqdn}:/home/centos/kubeconfig .'"
-}
-
-output "copy_config_ip" {
-    value = "To copy the kubectl config file using IP address, run: 'scp centos@${aws_eip.minikube.public_ip}:/home/centos/kubeconfig_ip .'"
 }
