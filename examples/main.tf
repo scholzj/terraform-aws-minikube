@@ -1,5 +1,5 @@
 module "minikube" {
-  source = "github.com/scholzj/terraform-aws-minikube"
+  source = "../"
 
   aws_region    = "eu-central-1"
   cluster_name  = "my-minikube"
