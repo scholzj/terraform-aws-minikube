@@ -204,8 +204,6 @@ resource "aws_instance" "minikube" {
 	      delete_on_termination = true
     }
 
-    depends_on = ["data.template_file.kubeadm_token"]
-
     lifecycle {
       ignore_changes = [
         "ami",
