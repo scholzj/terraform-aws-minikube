@@ -1,6 +1,16 @@
 #####
+# Setup AWS provider
+# (Retrieve AWS credentials from env variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY)
+#####
+
+provider "aws" {
+  region = "${var.aws_region}"
+}
+
+#####
 # Generate kubeadm token
 #####
+
 module "kubeadm-token" {
   source = "github.com/scholzj/terraform-kubeadm-token"
 }
