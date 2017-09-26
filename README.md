@@ -1,15 +1,13 @@
-# AWS Minikube
+# AWS Minikube Terraform module
 
 AWS Minikube is a single node Kubernetes deployment in AWS. It creates EC2 host and deploys Kubernetes cluster using [Kubeadm](https://kubernetes.io/docs/admin/kubeadm/) tool. It provides full integration with AWS. It is able to handle ELB load balancers, EBS disks, Route53 domains etc.
 
 <!-- TOC -->
 
-- [AWS Minikube](#aws-minikube)
+- [AWS Minikube Terraform module](#aws-minikube-terraform-module)
     - [Updates](#updates)
     - [Prerequisites and dependencies](#prerequisites-and-dependencies)
-    - [Configuration](#configuration)
-    - [Creating AWS Minikube](#creating-aws-minikube)
-    - [Deleting AWS Minikube](#deleting-aws-minikube)
+    - [Including the module](#including-the-module)
     - [Addons](#addons)
     - [Custom addons](#custom-addons)
     - [Tagging](#tagging)
@@ -18,6 +16,7 @@ AWS Minikube is a single node Kubernetes deployment in AWS. It creates EC2 host 
 
 ## Updates
 
+* *26.9.2017:* Split into module and configuration
 * *23.9.2017:* Bootstrap cluster purely through cloud init to skip AWS S3
 * *18.9.2017:* Clarify the requirements for AWS infrastructure
 * *11.9.2017:* Make it possible to connect to the cluster through the Elastic IP address instead of DNS name
@@ -26,44 +25,41 @@ AWS Minikube is a single node Kubernetes deployment in AWS. It creates EC2 host 
 
 ## Prerequisites and dependencies
 
-* AWS Minikube deployes into existing VPC / public subnet. If you don't have your VPC / subnet yet, you can use [this](https://github.com/scholzj/aws-vpc) configuration to create one.
+* AWS Minikube deployes into existing VPC / public subnet. If you don't have your VPC / subnet yet, you can use [this](https://github.com/scholzj/aws-vpc) configuration or [this](https://github.com/scholzj/terraform-aws-vpc) module to create one.
   * The VPC / subnet should be properly linked with Internet Gateway (IGW) and should have DNS and DHCP enabled.
   * Hosted DNS zone configured in Route53 (in case the zone is private you have to use IP address to copy `kubeconfig` and access the cluster).
 * To deploy AWS Minikube there are no other dependencies apart from [Terraform](https://www.terraform.io). Kubeadm is used only on the EC2 host and doesn't have to be installed locally.
 
-## Configuration
+## Including the module
 
-The configuration is done through Terraform variables. Example *tfvars* file is part of this repo and is named `example.tfvars`. Change the variables to match your environment / requirements before running `terraform apply ...`.
+Although it can be run on its own, the main value is that it can be included into another Terraform configuration which is using Kubeadm.
 
-| Option | Explanation | Example |
-|--------|-------------|---------|
-| `aws_region` | AWS region which should be used | `eu-central-1` |
-| `cluster_name` | Name of the Kubernetes cluster (also used to name different AWS resources) | `my-minikube` |
-| `aws_instance_type` | AWS EC2 instance type | `t2.medium` |
-| `ssh_public_key` | SSH key to connect to the remote machine | `~/.ssh/id_rsa.pub` |
-| `aws_subnet_id` | Subnet ID where minikube should run | `subnet-8d3407e5` |
-| `hosted_zone` | DNS zone which should be used | `my-domain.com` |
-| `hosted_zone_private` | Is the DNS zone public or ptivate | `false` |
-| `addons` | List of addons which should be installed | `[ "https://raw.githubusercontent.com/scholzj/aws-minikube/master/addons//storage-class.yaml" ]` |
-| `tags` | Tags which should be applied to all resources | `{ Hello = "World" }` |
+```hcl
+module "minikube" {
+  source = "github.com/scholzj/terraform-aws-minikube"
 
-## Creating AWS Minikube
+  aws_region    = "eu-central-1"
+  cluster_name  = "my-minikube"
+  aws_instance_type = "t2.medium"
+  ssh_public_key = "~/.ssh/id_rsa.pub"
+  aws_subnet_id = "subnet-8a3517f8"
+  hosted_zone = "my-domain.com"
+  hosted_zone_private = false
 
-To create AWS Minikube, 
-* Export AWS credentials into environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
-* Apply Terraform configuration:
-```bash
-terraform apply --var-file example.tfvars
+  tags = {
+    Application = "Minikube"
+  }
+
+  addons = [
+    "https://raw.githubusercontent.com/scholzj/aws-minikube/master/addons//storage-class.yaml",
+    "https://raw.githubusercontent.com/scholzj/aws-minikube/master/addons//heapster.yaml",
+    "https://raw.githubusercontent.com/scholzj/aws-minikube/master/addons//dashboard.yaml",
+    "https://raw.githubusercontent.com/scholzj/aws-minikube/master/addons//external-dns.yaml"
+  ]
+}
 ```
 
-## Deleting AWS Minikube
-
-To delete AWS Minikube, 
-* Export AWS credentials into environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
-* Destroy Terraform configuration:
-```bash
-terraform destroy --var-file example.tfvars
-```
+An example of how to include this can be found in the [examples](examples/) dir. 
 
 ## Addons
 
