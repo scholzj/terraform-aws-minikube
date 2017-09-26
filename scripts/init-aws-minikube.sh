@@ -16,7 +16,7 @@ set -o nounset
 
 # Set fully qualified hostname
 # This is needed to match the hostname expected by kubeadm an the hostname used by kubelet
-hostname $(curl -s http://169.254.169.254/latest/meta-data/hostname)
+FULL_HOSTNAME="$(curl -s http://169.254.169.254/latest/meta-data/hostname)"
 
 # Make DNS lowercase
 DNS_NAME=$(echo "$DNS_NAME" | tr 'A-Z' 'a-z')
@@ -71,7 +71,7 @@ apiServerCertSANs:
 EOF
 
 kubeadm reset
-kubeadm init --config /tmp/kubeadm.yaml
+kubeadm init --config /tmp/kubeadm.yaml --node-name $FULL_HOSTNAME
 rm /tmp/kubeadm.yaml
 
 # Use the local kubectl config for further kubectl operations
