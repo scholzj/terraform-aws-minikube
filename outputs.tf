@@ -19,10 +19,10 @@ output "dns" {
 
 output "kubeconfig_dns" {
     description = "Path to the the kubeconfig file using DNS address"
-    value = "To copy the kubectl config file using DNS record, run: 'scp centos@${aws_route53_record.minikube.fqdn}:/home/centos/kubeconfig .'"
+    value = "/home/centos/kubeconfig"
 }
 
 output "kubeconfig_ip" {
     description = "Path to the kubeconfig file using IP address"
-    value = "To copy the kubectl config file using IP address, run: 'scp centos@${aws_eip.minikube.public_ip}:/home/centos/kubeconfig_ip .'"
+    value = "/home/centos/kubeconfig_ip"
 }
