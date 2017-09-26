@@ -1,5 +1,5 @@
 module "minikube" {
-  source = "../"
+  source = "scholzj/minikube/aws"
 
   aws_region    = "eu-central-1"
   cluster_name  = "my-minikube"
