@@ -12,7 +12,7 @@ provider "aws" {
 #####
 
 module "kubeadm-token" {
-  source = "github.com/scholzj/terraform-kubeadm-token"
+  source = "scholzj/kubeadm-token/random"
 }
 
 #####
