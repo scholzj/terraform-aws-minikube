@@ -14,8 +14,7 @@ export KUBERNETES_VERSION="1.7.5"
 # Set this only after setting the defaults
 set -o nounset
 
-# Set fully qualified hostname
-# This is needed to match the hostname expected by kubeadm an the hostname used by kubelet
+# We needed to match the hostname expected by kubeadm an the hostname used by kubelet
 FULL_HOSTNAME="$(curl -s http://169.254.169.254/latest/meta-data/hostname)"
 
 # Make DNS lowercase
