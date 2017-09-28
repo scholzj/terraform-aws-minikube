@@ -33,7 +33,7 @@ AWS Minikube is a single node Kubernetes deployment in AWS. It creates EC2 host 
 
 ## Including the module
 
-Although it can be run on its own, the main value is that it can be included into another Terraform configuration which is using Kubeadm.
+Although it can be run on its own, the main value is that it can be included into another Terraform configuration.
 
 ```hcl
 module "minikube" {
