@@ -93,7 +93,7 @@ kubectl create clusterrolebinding admin-cluster-binding --clusterrole=cluster-ad
 export KUBECONFIG_OUTPUT=/home/centos/kubeconfig
 kubeadm alpha phase kubeconfig user \
   --client-name admin \
-  --apiserver-advertise-address $DNS_NAME:6443 \
+  --apiserver-advertise-address $DNS_NAME \
   > $KUBECONFIG_OUTPUT
 chown centos:centos $KUBECONFIG_OUTPUT
 chmod 0600 $KUBECONFIG_OUTPUT
