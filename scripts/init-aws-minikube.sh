@@ -91,18 +91,18 @@ kubectl create clusterrolebinding admin-cluster-binding --clusterrole=cluster-ad
 
 # Prepare the kubectl config file for download to client (DNS)
 export KUBECONFIG_OUTPUT=/home/centos/kubeconfig
-kubeadm alpha phase kubeconfig client-certs \
+kubeadm alpha phase kubeconfig user \
   --client-name admin \
-  --server "https://$DNS_NAME:6443" \
+  --apiserver-advertise-address $DNS_NAME:6443 \
   > $KUBECONFIG_OUTPUT
 chown centos:centos $KUBECONFIG_OUTPUT
 chmod 0600 $KUBECONFIG_OUTPUT
 
 # Prepare the kubectl config file for download to client (IP address)
 export KUBECONFIG_OUTPUT=/home/centos/kubeconfig_ip
-kubeadm alpha phase kubeconfig client-certs \
+kubeadm alpha phase kubeconfig user \
   --client-name admin \
-  --server "https://$IP_ADDRESS:6443" \
+  --apiserver-advertise-address $IP_ADDRESS \
   > $KUBECONFIG_OUTPUT
 chown centos:centos $KUBECONFIG_OUTPUT
 chmod 0600 $KUBECONFIG_OUTPUT
