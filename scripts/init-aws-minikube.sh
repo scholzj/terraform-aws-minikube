@@ -62,7 +62,7 @@ apiVersion: kubeadm.k8s.io/v1alpha1
 kind: MasterConfiguration
 nodeName: $FULL_HOSTNAME
 token: $KUBEADM_TOKEN
-tokenTTL: 0
+tokenTTL: "0"
 cloudProvider: aws
 kubernetesVersion: v$KUBERNETES_VERSION
 apiServerCertSANs:
