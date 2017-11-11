@@ -41,7 +41,7 @@ setenforce 0
 yum install -y kubelet-$KUBERNETES_VERSION kubeadm-$KUBERNETES_VERSION kubernetes-cni
 
 # Fix kubelet configuration
-sed -i 's/--cgroup-driver=systemd/--cgroup-driver=cgroupfs/g' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+sed -i 's/--cgroup-driver=systemd/--cgroup-driver=cgroupfs --feature-gates Initializers=true/g' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
 sed -i '/Environment="KUBELET_CGROUP_ARGS/i Environment="KUBELET_CLOUD_ARGS=--cloud-provider=aws"' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
 sed -i 's/$KUBELET_CGROUP_ARGS/$KUBELET_CLOUD_ARGS $KUBELET_CGROUP_ARGS/g' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
 
@@ -56,7 +56,7 @@ sysctl net.bridge.bridge-nf-call-iptables=1
 sysctl net.bridge.bridge-nf-call-ip6tables=1
 
 # Initialize the master
-cat >/tmp/kubeadm.yaml <<EOF
+cat > /tmp/kubeadm.yaml <<EOF
 ---
 apiVersion: kubeadm.k8s.io/v1alpha1
 kind: MasterConfiguration
@@ -68,6 +68,13 @@ kubernetesVersion: v$KUBERNETES_VERSION
 apiServerCertSANs:
 - $DNS_NAME
 - $IP_ADDRESS
+apiServerExtraArgs:
+  feature-gates: Initializers=true
+  runtime-config: admissionregistration.k8s.io/v1alpha1=true
+controllerManagerExtraArgs:
+  feature-gates: Initializers=true
+schedulerExtraArgs:
+  feature-gates: Initializers=true
 EOF
 
 kubeadm reset
