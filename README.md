@@ -2,15 +2,14 @@
 
 AWS Minikube is a single node Kubernetes deployment in AWS. It creates EC2 host and deploys Kubernetes cluster using [Kubeadm](https://kubernetes.io/docs/admin/kubeadm/) tool. It provides full integration with AWS. It is able to handle ELB load balancers, EBS disks, Route53 domains etc.
 
-<!-- TOC -->
+<!-- TOC depthFrom:2 -->
 
-- [AWS Minikube Terraform module](#aws-minikube-terraform-module)
-    - [Updates](#updates)
-    - [Prerequisites and dependencies](#prerequisites-and-dependencies)
-    - [Including the module](#including-the-module)
-    - [Addons](#addons)
-    - [Custom addons](#custom-addons)
-    - [Tagging](#tagging)
+- [Updates](#updates)
+- [Prerequisites and dependencies](#prerequisites-and-dependencies)
+- [Including the module](#including-the-module)
+- [Addons](#addons)
+- [Custom addons](#custom-addons)
+- [Tagging](#tagging)
 
 <!-- /TOC -->
 
