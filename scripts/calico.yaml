@@ -81,14 +81,10 @@ spec:
       - key: node.cloudprovider.kubernetes.io/uninitialized
         value: "true"
         effect: NoSchedule
-      - key: node-role.kubernetes.io/master
-        effect: NoSchedule
       # Allow this pod to be rescheduled while the node is in "critical add-ons only" mode.
       # This, along with the annotation above marks this pod as a critical add-on.
       - key: CriticalAddonsOnly
         operator: Exists
-      nodeSelector:
-        node-role.kubernetes.io/master: ""
       hostNetwork: true
       containers:
         - name: calico-etcd
@@ -172,8 +168,6 @@ spec:
       # so we should tolerate it to schedule the calico pods
       - key: node.cloudprovider.kubernetes.io/uninitialized
         value: "true"
-        effect: NoSchedule
-      - key: node-role.kubernetes.io/master
         effect: NoSchedule
       # Allow this pod to be rescheduled while the node is in "critical add-ons only" mode.
       # This, along with the annotation above marks this pod as a critical add-on.
@@ -337,8 +331,6 @@ spec:
       # so we should tolerate it to schedule the calico pods
       - key: node.cloudprovider.kubernetes.io/uninitialized
         value: "true"
-        effect: NoSchedule
-      - key: node-role.kubernetes.io/master
         effect: NoSchedule
       # Allow this pod to be rescheduled while the node is in "critical add-ons only" mode.
       # This, along with the annotation above marks this pod as a critical add-on.
