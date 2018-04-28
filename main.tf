@@ -181,7 +181,7 @@ resource "aws_instance" "minikube" {
   # Instance type - any of the c4 should do for now
   instance_type = "${var.aws_instance_type}"
 
-  ami = "${data.aws_ami.centos7.id}"
+  ami = "${length(var.ami_image_id) > 0 ? var.ami_image_id : data.aws_ami.centos7.id}"
 
   key_name = "${aws_key_pair.minikube_keypair.key_name}"
 

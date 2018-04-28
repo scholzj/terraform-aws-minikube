@@ -7,6 +7,7 @@ AWS Minikube is a single node Kubernetes deployment in AWS. It creates EC2 host 
 - [Updates](#updates)
 - [Prerequisites and dependencies](#prerequisites-and-dependencies)
 - [Including the module](#including-the-module)
+- [Using custom AMI Image](#using-custom-ami-image)
 - [Addons](#addons)
 - [Custom addons](#custom-addons)
 - [Tagging](#tagging)
@@ -62,6 +63,7 @@ module "minikube" {
   aws_instance_type = "t2.medium"
   ssh_public_key = "~/.ssh/id_rsa.pub"
   aws_subnet_id = "subnet-8a3517f8"
+  ami_image_id = "ami-b81dbfc5"
   hosted_zone = "my-domain.com"
   hosted_zone_private = false
 
@@ -79,6 +81,10 @@ module "minikube" {
 ```
 
 An example of how to include this can be found in the [examples](examples/) dir. 
+
+## Using custom AMI Image
+
+AWS Minikube is built and tested on CentOS 7. But gives you the possibility to use their own AMI images. Your custom AMI image should be based on RPM distribution and should be similar to Cent OS 7. When `ami_image_id` variable is not specified, the latest available CentOS 7 image will be used.
 
 ## Addons
 
