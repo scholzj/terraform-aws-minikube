@@ -9,7 +9,7 @@ export DNS_NAME=${dns_name}
 export IP_ADDRESS=${ip_address}
 export CLUSTER_NAME=${cluster_name}
 export ADDONS="${addons}"
-export KUBERNETES_VERSION="1.10.5"
+export KUBERNETES_VERSION="1.11.2"
 
 # Set this only after setting the defaults
 set -o nounset
@@ -76,7 +76,7 @@ apiServerCertSANs:
 - $IP_ADDRESS
 EOF
 
-kubeadm reset
+kubeadm reset --force
 kubeadm init --config /tmp/kubeadm.yaml
 rm /tmp/kubeadm.yaml
 
@@ -96,13 +96,13 @@ kubectl label nodes --all node-role.kubernetes.io/master-
 kubectl create clusterrolebinding admin-cluster-binding --clusterrole=cluster-admin --user=admin
 
 # Prepare the kubectl config file for download to client (DNS)
-export KUBECONFIG_OUTPUT=/home/centos/kubeconfig
-kubeadm alpha phase kubeconfig user \
-  --client-name admin \
-  --apiserver-advertise-address $DNS_NAME \
-  > $KUBECONFIG_OUTPUT
-chown centos:centos $KUBECONFIG_OUTPUT
-chmod 0600 $KUBECONFIG_OUTPUT
+# export KUBECONFIG_OUTPUT=/home/centos/kubeconfig
+# kubeadm alpha phase kubeconfig user \
+#   --client-name admin \
+#   --apiserver-advertise-address $DNS_NAME \
+#   > $KUBECONFIG_OUTPUT
+# chown centos:centos $KUBECONFIG_OUTPUT
+# chmod 0600 $KUBECONFIG_OUTPUT
 
 # Prepare the kubectl config file for download to client (IP address)
 export KUBECONFIG_OUTPUT=/home/centos/kubeconfig_ip
@@ -112,6 +112,11 @@ kubeadm alpha phase kubeconfig user \
   > $KUBECONFIG_OUTPUT
 chown centos:centos $KUBECONFIG_OUTPUT
 chmod 0600 $KUBECONFIG_OUTPUT
+
+cp /home/centos/kubeconfig_ip /home/centos/kubeconfig
+sed -i "s/server: https:\/\/$IP_ADDRESS:6443/server: https:\/\/$DNS_NAME:6443/g" /home/centos/kubeconfig
+chown centos:centos /home/centos/kubeconfig
+chmod 0600 /home/centos/kubeconfig
 
 # Load addons
 for ADDON in $ADDONS
