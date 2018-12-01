@@ -9,7 +9,7 @@ export DNS_NAME=${dns_name}
 export IP_ADDRESS=${ip_address}
 export CLUSTER_NAME=${cluster_name}
 export ADDONS="${addons}"
-export KUBERNETES_VERSION="1.12.2"
+export KUBERNETES_VERSION="1.12.3"
 
 # Set this only after setting the defaults
 set -o nounset
@@ -21,8 +21,7 @@ FULL_HOSTNAME="$(curl -s http://169.254.169.254/latest/meta-data/hostname)"
 DNS_NAME=$(echo "$DNS_NAME" | tr 'A-Z' 'a-z')
 
 # Install docker
-yum install -y yum-utils curl gettext device-mapper-persistent-data lvm2
-yum install -y docker
+yum install -y yum-utils curl gettext device-mapper-persistent-data lvm2 docker
 
 # Install Kubernetes components
 sudo cat <<EOF > /etc/yum.repos.d/kubernetes.repo
