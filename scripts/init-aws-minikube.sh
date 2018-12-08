@@ -9,7 +9,7 @@ export DNS_NAME=${dns_name}
 export IP_ADDRESS=${ip_address}
 export CLUSTER_NAME=${cluster_name}
 export ADDONS="${addons}"
-export KUBERNETES_VERSION="1.12.3"
+export KUBERNETES_VERSION="1.13.0"
 
 # Set this only after setting the defaults
 set -o nounset
@@ -118,7 +118,7 @@ kubectl create clusterrolebinding admin-cluster-binding --clusterrole=cluster-ad
 
 # Prepare the kubectl config file for download to client (IP address)
 export KUBECONFIG_OUTPUT=/home/centos/kubeconfig_ip
-kubeadm alpha phase kubeconfig user \
+kubeadm alpha kubeconfig user \
   --client-name admin \
   --apiserver-advertise-address $IP_ADDRESS \
   > $KUBECONFIG_OUTPUT
