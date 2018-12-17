@@ -1,5 +1,7 @@
 #!/bin/bash
 
+exec &> /var/log/init-aws-minikube.log
+
 set -o verbose
 set -o errexit
 set -o pipefail
@@ -9,7 +11,7 @@ export DNS_NAME=${dns_name}
 export IP_ADDRESS=${ip_address}
 export CLUSTER_NAME=${cluster_name}
 export ADDONS="${addons}"
-export KUBERNETES_VERSION="1.13.0"
+export KUBERNETES_VERSION="1.13.1"
 
 # Set this only after setting the defaults
 set -o nounset
