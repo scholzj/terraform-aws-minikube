@@ -44,3 +44,13 @@ variable "ami_image_id" {
   description = "ID of the AMI image which should be used. If empty, the latest CentOS 7 image will be used. See README.md for AMI image requirements."
   default     = ""
 }
+
+variable "ssh_access_cidr" {
+    description = "CIDR from which SSH access is allowed"
+    default     = "0.0.0.0/0"
+}
+
+variable "api_access_cidr" {
+    description = "CIDR from which API access is allowed"
+    default     = "0.0.0.0/0"
+}
