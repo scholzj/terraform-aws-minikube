@@ -37,12 +37,10 @@ gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg
         https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
 EOF
 
-# setenforce returns non zero if already SE Linux is already disabled
-is_enforced=$(getenforce)
-if [[ $is_enforced != "Disabled" ]]; then
-  setenforce 0
-  sed -i 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/sysconfig/selinux
-fi
+# Disable SELinux
+setenforce 0
+sed -i 's/^SELINUX=.*/SELINUX=disabled/' /etc/sysconfig/selinux
+sed -i 's/^SELINUX=.*/SELINUX=disabled/' /etc/selinux/config
 
 yum install -y kubelet-$KUBERNETES_VERSION kubeadm-$KUBERNETES_VERSION kubernetes-cni
 
