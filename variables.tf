@@ -9,12 +9,12 @@ variable "cluster_name" {
 
 variable "tags" {
   description = "Tags used for the AWS resources created by this template"
-  type        = "map"
+  type        = map(string)
 }
 
 variable "addons" {
   description = "list of YAML files with Kubernetes addons which should be installed"
-  type        = "list"
+  type        = list(string)
 }
 
 variable "aws_instance_type" {
@@ -46,11 +46,12 @@ variable "ami_image_id" {
 }
 
 variable "ssh_access_cidr" {
-    description = "CIDR from which SSH access is allowed"
-    default     = "0.0.0.0/0"
+  description = "CIDR from which SSH access is allowed"
+  default     = "0.0.0.0/0"
 }
 
 variable "api_access_cidr" {
-    description = "CIDR from which API access is allowed"
-    default     = "0.0.0.0/0"
+  description = "CIDR from which API access is allowed"
+  default     = "0.0.0.0/0"
 }
+
