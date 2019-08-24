@@ -154,6 +154,12 @@ rules:
       - ingresses/status
     verbs:
       - update
+  - apiGroups:
+      - "networking.k8s.io"
+    resources:
+      - ingresses/status
+    verbs:
+      - update
 ---
 
 kind: Service
