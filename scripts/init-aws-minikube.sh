@@ -11,7 +11,7 @@ export DNS_NAME=${dns_name}
 export IP_ADDRESS=${ip_address}
 export CLUSTER_NAME=${cluster_name}
 export ADDONS="${addons}"
-export KUBERNETES_VERSION="1.15.3"
+export KUBERNETES_VERSION="1.16.0"
 
 # Set this only after setting the defaults
 set -o nounset
@@ -44,11 +44,6 @@ sed -i 's/^SELINUX=.*/SELINUX=disabled/' /etc/selinux/config
 
 yum install -y kubelet-$KUBERNETES_VERSION kubeadm-$KUBERNETES_VERSION kubernetes-cni
 
-# Fix kubelet configuration
-sed -i 's/--cgroup-driver=systemd/--cgroup-driver=cgroupfs/g' /usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf
-sed -i '/Environment="KUBELET_CGROUP_ARGS/i Environment="KUBELET_CLOUD_ARGS=--cloud-provider=aws"' /usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf
-sed -i 's/$KUBELET_CGROUP_ARGS/$KUBELET_CLOUD_ARGS $KUBELET_CGROUP_ARGS/g' /usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf
-
 # Start services
 systemctl enable docker
 systemctl start docker
@@ -62,8 +57,7 @@ sysctl net.bridge.bridge-nf-call-ip6tables=1
 # Initialize the master
 cat >/tmp/kubeadm.yaml <<EOF
 ---
-
-apiVersion: kubeadm.k8s.io/v1beta1
+apiVersion: kubeadm.k8s.io/v1beta2
 kind: InitConfiguration
 bootstrapTokens:
 - groups:
@@ -83,8 +77,7 @@ nodeRegistration:
   - effect: NoSchedule
     key: node-role.kubernetes.io/master
 ---
-
-apiVersion: kubeadm.k8s.io/v1beta1
+apiVersion: kubeadm.k8s.io/v1beta2
 kind: ClusterConfiguration
 apiServer:
   certSANs:
@@ -106,10 +99,12 @@ etcd:
 imageRepository: k8s.gcr.io
 kubernetesVersion: v$KUBERNETES_VERSION
 networking:
+  podNetworkCidr: 192.168.0.0/16
   dnsDomain: cluster.local
   podSubnet: ""
   serviceSubnet: 10.96.0.0/12
-
+scheduler: {}
+---
 EOF
 
 kubeadm reset --force
