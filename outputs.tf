@@ -27,3 +27,6 @@ output "kubeconfig_ip" {
   value       = "/home/centos/kubeconfig_ip"
 }
 
+output "cloud_init_sh" {
+  value = data.template_file.init_minikube.rendered 
+}

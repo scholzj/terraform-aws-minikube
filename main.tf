@@ -249,7 +249,3 @@ resource "aws_route53_record" "minikube" {
   records = [aws_eip.minikube.public_ip]
   ttl = 300
 }
-
-output "cloud_init_sh" {
-  value = data.template_file.init_minikube.rendered 
-}
