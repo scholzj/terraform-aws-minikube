@@ -222,7 +222,7 @@ resource "aws_instance" "minikube" {
   lifecycle {
     ignore_changes = [
       ami,
-      user_data,
+     # user_data,
       associate_public_ip_address,
     ]
   }
