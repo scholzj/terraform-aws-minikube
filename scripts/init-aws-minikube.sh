@@ -146,3 +146,6 @@ do
   kubectl apply -f /tmp/addon.yaml
   rm /tmp/addon.yaml
 done
+
+# Allow user supplied userdata code
+${additional_userdata}

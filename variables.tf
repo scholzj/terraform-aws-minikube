@@ -17,6 +17,11 @@ variable "addons" {
   type        = list(string)
 }
 
+variable "additional_userdata" {
+  description = "Additional string or rendered file to append to the default userdata."
+  default = ""
+}
+
 variable "aws_instance_type" {
   description = "Type of instance"
   default     = "t2.medium"
