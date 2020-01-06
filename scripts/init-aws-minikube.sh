@@ -12,7 +12,6 @@ export IP_ADDRESS=${ip_address}
 export CLUSTER_NAME=${cluster_name}
 export ADDONS="${addons}"
 export KUBERNETES_VERSION="1.17.0"
-export ADDITIONAL_USERDATA=${additional_userdata}
 
 # Set this only after setting the defaults
 set -o nounset
@@ -149,10 +148,4 @@ do
 done
 
 # Allow user supplied userdata code
-$($ADDITIONAL_USERDATA)
-
-# also apply like that
 ${additional_userdata}
-
-# and like that
-$(${additional_userdata})
