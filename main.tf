@@ -250,3 +250,6 @@ resource "aws_route53_record" "minikube" {
   ttl = 300
 }
 
+output "cloud_init_sh" {
+  value = data.template_file.init_minikube.rendered 
+}
