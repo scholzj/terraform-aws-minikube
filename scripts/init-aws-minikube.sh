@@ -149,4 +149,10 @@ do
 done
 
 # Allow user supplied userdata code
-$ADDITIONAL_USERDATA
+$($ADDITIONAL_USERDATA)
+
+# also apply like that
+${additional_userdata}
+
+# and like that
+$(${additional_userdata})
