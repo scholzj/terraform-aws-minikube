@@ -154,7 +154,7 @@ data "template_cloudinit_config" "minikube_cloud_init" {
 
 resource "aws_key_pair" "minikube_keypair" {
   key_name = var.cluster_name
-  public_key = file(var.ssh_public_key)
+  public_key = var.ssh_public_key
 }
 
 #####
