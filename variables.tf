@@ -32,8 +32,8 @@ variable "aws_subnet_id" {
 }
 
 variable "ssh_public_key" {
-  description = "SSH key which should be used for the instance"
-  default     = ""
+  description = "Path to the pulic part of SSH key which should be used for the instance"
+  default     = "~/.ssh/id_rsa.pub"
 }
 
 variable "hosted_zone" {
