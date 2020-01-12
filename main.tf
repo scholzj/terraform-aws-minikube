@@ -114,12 +114,12 @@ data "template_file" "init_minikube" {
   template = file("${path.module}/scripts/init-aws-minikube.sh")
 
   vars = {
-    kubeadm_token = module.kubeadm-token.token
-    dns_name = "${var.cluster_name}.${var.hosted_zone}"
-    ip_address = aws_eip.minikube.public_ip
-    cluster_name = var.cluster_name
-    addons = join(" ", var.addons)
-    additional_userdata = var.additional_userdata
+    #kubeadm_token = module.kubeadm-token.token
+    #dns_name = "${var.cluster_name}.${var.hosted_zone}"
+    #ip_address = aws_eip.minikube.public_ip
+    #cluster_name = var.cluster_name
+    #addons = join(" ", var.addons)
+    #additional_userdata = var.additional_userdata
   }
 }
 
