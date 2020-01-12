@@ -10,7 +10,8 @@ provider "aws" {
 #####
 # Generate kubeadm token
 #####
-
+# NOTICE Forked module to prevent user-data recreation due to depends-on
+# Issue https://github.com/hashicorp/terraform/issues/11806 
 module "kubeadm-token" {
   source = "git::https://github.com/shalb/terraform-random-kubeadm-token.git"
 }
