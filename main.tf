@@ -42,6 +42,13 @@ resource "aws_security_group" "minikube" {
     protocol    = "tcp"
     cidr_blocks = [var.ssh_access_cidr]
   }
+  
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [var.api_access_cidr]
+  }
 
   ingress {
     from_port   = 6443
