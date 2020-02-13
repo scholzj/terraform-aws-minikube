@@ -4,7 +4,7 @@
 
 output "ssh_user" {
   description = "SSH user to download kubeconfig file"
-  value       = "centos"
+  value       = "ubuntu"
 }
 
 output "public_ip" {
@@ -19,12 +19,12 @@ output "dns" {
 
 output "kubeconfig_dns" {
   description = "Path to the the kubeconfig file using DNS address"
-  value       = "/home/centos/kubeconfig"
+  value       = "/home/ubuntu/kubeconfig"
 }
 
 output "kubeconfig_ip" {
   description = "Path to the kubeconfig file using IP address"
-  value       = "/home/centos/kubeconfig_ip"
+  value       = "/home/ubuntu/kubeconfig_ip"
 }
 
 output "cloud_init_sh" {

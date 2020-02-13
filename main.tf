@@ -169,24 +169,20 @@ resource "aws_key_pair" "minikube_keypair" {
 # EC2 instance
 #####
 
-data "aws_ami" "centos7" {
+data "aws_ami" "ubuntu18" {
   most_recent = true
-  owners = ["aws-marketplace"]
 
   filter {
-    name = "product-code"
-    values = ["aw0evgkw8e5c1q413zgy5pjce"]
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-*"]
   }
 
   filter {
-    name = "architecture"
-    values = ["x86_64"]
-  }
-
-  filter {
-    name = "virtualization-type"
+    name   = "virtualization-type"
     values = ["hvm"]
   }
+
+  owners = ["099720109477"] # Canonical
 }
 
 resource "aws_eip" "minikube" {
@@ -197,7 +193,7 @@ resource "aws_instance" "minikube" {
   # Instance type - any of the c4 should do for now
   instance_type = var.aws_instance_type
 
-  ami = length(var.ami_image_id) > 0 ? var.ami_image_id : data.aws_ami.centos7.id
+  ami = length(var.ami_image_id) > 0 ? var.ami_image_id : data.aws_ami.ubuntu18.id
 
   key_name = aws_key_pair.minikube_keypair.key_name
 
