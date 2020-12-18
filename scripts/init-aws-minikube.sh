@@ -23,18 +23,67 @@ FULL_HOSTNAME="$(curl -s http://169.254.169.254/latest/meta-data/hostname)"
 # Make DNS lowercase
 DNS_NAME=$(echo "$DNS_NAME" | tr 'A-Z' 'a-z')
 
+########################################
+########################################
+# Disable SELinux
+########################################
+########################################
+setenforce 0
+sed -i 's/^SELINUX=.*/SELINUX=disabled/' /etc/sysconfig/selinux
+sed -i 's/^SELINUX=.*/SELINUX=disabled/' /etc/selinux/config
+
+########################################
+########################################
+# Install containerd
+########################################
+########################################
+cat <<EOF | tee /etc/modules-load.d/containerd.conf
+overlay
+br_netfilter
+EOF
+
+modprobe overlay
+modprobe br_netfilter
+
+# Setup required sysctl params, these persist across reboots.
+cat <<EOF | tee /etc/sysctl.d/99-kubernetes-cri.conf
+net.bridge.bridge-nf-call-iptables  = 1
+net.ipv4.ip_forward                 = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+EOF
+
+# Apply sysctl params without reboot
+sysctl --system
+
+yum install -y yum-utils curl gettext device-mapper-persistent-data lvm2
+yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+sudo yum install -y containerd.io
+mkdir -p /etc/containerd
+containerd config default > /etc/containerd/config.toml
+sed -i '/^          \[plugins\."io\.containerd\.grpc\.v1\.cri"\.containerd\.runtimes\.runc\.options\]/a \            SystemdCgroup = true' /etc/containerd/config.toml
+systemctl restart containerd
+
+########################################
+########################################
 # Install docker
+########################################
+########################################
 
-# yum install -y yum-utils curl gettext device-mapper-persistent-data lvm2
-# yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-# sudo yum install -y containerd.io
-# mkdir -p /etc/containerd
-# containerd config default > /etc/containerd/config.toml
-# systemctl restart containerd
+# yum install -y yum-utils curl gettext device-mapper-persistent-data lvm2 docker
 
-yum install -y yum-utils curl gettext device-mapper-persistent-data lvm2 docker
+# # Start services
+# systemctl enable docker
+# systemctl start docker
 
-# Install Kubernetes components
+# # Set settings needed by Docker
+# sysctl net.bridge.bridge-nf-call-iptables=1
+# sysctl net.bridge.bridge-nf-call-ip6tables=1
+
+########################################
+########################################
+# Install Kubernetes compoenents
+########################################
+########################################
 sudo cat <<EOF > /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
 name=Kubernetes
@@ -46,22 +95,17 @@ gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg
         https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
 EOF
 
-# Disable SELinux
-setenforce 0
-sed -i 's/^SELINUX=.*/SELINUX=disabled/' /etc/sysconfig/selinux
-sed -i 's/^SELINUX=.*/SELINUX=disabled/' /etc/selinux/config
-
 yum install -y kubelet-$KUBERNETES_VERSION kubeadm-$KUBERNETES_VERSION kubernetes-cni
 
 # Start services
-systemctl enable docker
-systemctl start docker
 systemctl enable kubelet
 systemctl start kubelet
 
-# Set settings needed by Docker
-sysctl net.bridge.bridge-nf-call-iptables=1
-sysctl net.bridge.bridge-nf-call-ip6tables=1
+########################################
+########################################
+# Initialize the Kube cluster
+########################################
+########################################
 
 # Initialize the master
 cat >/tmp/kubeadm.yaml <<EOF
@@ -81,6 +125,7 @@ nodeRegistration:
   kubeletExtraArgs:
     cloud-provider: aws
     read-only-port: "10255"
+    cgroup-driver: systemd
   name: $FULL_HOSTNAME
   taints:
   - effect: NoSchedule
@@ -122,7 +167,7 @@ scheduler: {}
 EOF
 
 kubeadm reset --force
-kubeadm init --config /tmp/kubeadm.yaml #--ignore-preflight-errors=FileContent--proc-sys-net-bridge-bridge-nf-call-iptables,FileContent--proc-sys-net-ipv4-ip_forward
+kubeadm init --config /tmp/kubeadm.yaml
 
 # Use the local kubectl config for further kubectl operations
 export KUBECONFIG=/etc/kubernetes/admin.conf
@@ -136,16 +181,18 @@ kubectl taint nodes --all node-role.kubernetes.io/master-
 # Allow load balancers to route to master
 kubectl label nodes --all node-role.kubernetes.io/master-
 
+########################################
+########################################
+# Create user and kubeconfig files
+########################################
+########################################
+
 # Allow the user to administer the cluster
 kubectl create clusterrolebinding admin-cluster-binding --clusterrole=cluster-admin --user=admin
 
 # Prepare the kubectl config file for download to client (IP address)
 export KUBECONFIG_OUTPUT=/home/centos/kubeconfig_ip
 kubeadm alpha kubeconfig user --client-name admin --config /tmp/kubeadm.yaml > $KUBECONFIG_OUTPUT
-# kubeadm alpha kubeconfig user \
-#   --client-name admin \
-#   --apiserver-advertise-address $IP_ADDRESS \
-#   > $KUBECONFIG_OUTPUT
 chown centos:centos $KUBECONFIG_OUTPUT
 chmod 0600 $KUBECONFIG_OUTPUT
 
@@ -155,7 +202,11 @@ sed -i "s/server: https:\/\/.*:6443/server: https:\/\/$DNS_NAME:6443/g" /home/ce
 chown centos:centos /home/centos/kubeconfig
 chmod 0600 /home/centos/kubeconfig
 
-# Load addons
+########################################
+########################################
+# Install addons
+########################################
+########################################
 for ADDON in $ADDONS
 do
   curl $ADDON | envsubst > /tmp/addon.yaml
