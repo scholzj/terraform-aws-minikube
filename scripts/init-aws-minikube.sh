@@ -11,18 +11,27 @@ export DNS_NAME=${dns_name}
 export IP_ADDRESS=${ip_address}
 export CLUSTER_NAME=${cluster_name}
 export ADDONS="${addons}"
-export KUBERNETES_VERSION="1.19.4"
+export KUBERNETES_VERSION="1.20.0"
 
 # Set this only after setting the defaults
 set -o nounset
 
 # We needed to match the hostname expected by kubeadm an the hostname used by kubelet
+LOCAL_IP_ADDRESS=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
 FULL_HOSTNAME="$(curl -s http://169.254.169.254/latest/meta-data/hostname)"
 
 # Make DNS lowercase
 DNS_NAME=$(echo "$DNS_NAME" | tr 'A-Z' 'a-z')
 
 # Install docker
+
+# yum install -y yum-utils curl gettext device-mapper-persistent-data lvm2
+# yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+# sudo yum install -y containerd.io
+# mkdir -p /etc/containerd
+# containerd config default > /etc/containerd/config.toml
+# systemctl restart containerd
+
 yum install -y yum-utils curl gettext device-mapper-persistent-data lvm2 docker
 
 # Install Kubernetes components
@@ -68,7 +77,7 @@ bootstrapTokens:
   - signing
   - authentication
 nodeRegistration:
-  criSocket: /var/run/dockershim.sock
+  #criSocket: /var/run/dockershim.sock
   kubeletExtraArgs:
     cloud-provider: aws
     read-only-port: "10255"
@@ -76,6 +85,9 @@ nodeRegistration:
   taints:
   - effect: NoSchedule
     key: node-role.kubernetes.io/master
+# localAPIEndpoint:
+#   advertiseAddress: $IP_ADDRESS
+#   bindPort: 6443
 ---
 apiVersion: kubeadm.k8s.io/v1beta2
 kind: ClusterConfiguration
@@ -83,6 +95,8 @@ apiServer:
   certSANs:
   - $DNS_NAME
   - $IP_ADDRESS
+  - $LOCAL_IP_ADDRESS
+  - $FULL_HOSTNAME
   extraArgs:
     cloud-provider: aws
   timeoutForControlPlane: 5m0s
@@ -99,16 +113,16 @@ etcd:
 imageRepository: k8s.gcr.io
 kubernetesVersion: v$KUBERNETES_VERSION
 networking:
-  podNetworkCidr: 192.168.0.0/16
+  #podNetworkCidr: 192.168.0.0/16
   dnsDomain: cluster.local
-  podSubnet: ""
+  podSubnet: 192.168.0.0/16
   serviceSubnet: 10.96.0.0/12
 scheduler: {}
 ---
 EOF
 
 kubeadm reset --force
-kubeadm init --config /tmp/kubeadm.yaml #--ignore-preflight-errors=SystemVerification
+kubeadm init --config /tmp/kubeadm.yaml #--ignore-preflight-errors=FileContent--proc-sys-net-bridge-bridge-nf-call-iptables,FileContent--proc-sys-net-ipv4-ip_forward
 
 # Use the local kubectl config for further kubectl operations
 export KUBECONFIG=/etc/kubernetes/admin.conf
@@ -127,15 +141,17 @@ kubectl create clusterrolebinding admin-cluster-binding --clusterrole=cluster-ad
 
 # Prepare the kubectl config file for download to client (IP address)
 export KUBECONFIG_OUTPUT=/home/centos/kubeconfig_ip
-kubeadm alpha kubeconfig user \
-  --client-name admin \
-  --apiserver-advertise-address $IP_ADDRESS \
-  > $KUBECONFIG_OUTPUT
+kubeadm alpha kubeconfig user --client-name admin --config /tmp/kubeadm.yaml > $KUBECONFIG_OUTPUT
+# kubeadm alpha kubeconfig user \
+#   --client-name admin \
+#   --apiserver-advertise-address $IP_ADDRESS \
+#   > $KUBECONFIG_OUTPUT
 chown centos:centos $KUBECONFIG_OUTPUT
 chmod 0600 $KUBECONFIG_OUTPUT
 
 cp /home/centos/kubeconfig_ip /home/centos/kubeconfig
-sed -i "s/server: https:\/\/$IP_ADDRESS:6443/server: https:\/\/$DNS_NAME:6443/g" /home/centos/kubeconfig
+sed -i "s/server: https:\/\/.*:6443/server: https:\/\/$IP_ADDRESS:6443/g" /home/centos/kubeconfig_ip
+sed -i "s/server: https:\/\/.*:6443/server: https:\/\/$DNS_NAME:6443/g" /home/centos/kubeconfig
 chown centos:centos /home/centos/kubeconfig
 chmod 0600 /home/centos/kubeconfig
 
