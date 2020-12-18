@@ -11,7 +11,7 @@ export DNS_NAME=${dns_name}
 export IP_ADDRESS=${ip_address}
 export CLUSTER_NAME=${cluster_name}
 export ADDONS="${addons}"
-export KUBERNETES_VERSION="1.20.0"
+export KUBERNETES_VERSION="1.20.1"
 
 # Set this only after setting the defaults
 set -o nounset
@@ -121,7 +121,6 @@ bootstrapTokens:
   - signing
   - authentication
 nodeRegistration:
-  #criSocket: /var/run/dockershim.sock
   kubeletExtraArgs:
     cloud-provider: aws
     read-only-port: "10255"
@@ -130,9 +129,6 @@ nodeRegistration:
   taints:
   - effect: NoSchedule
     key: node-role.kubernetes.io/master
-# localAPIEndpoint:
-#   advertiseAddress: $IP_ADDRESS
-#   bindPort: 6443
 ---
 apiVersion: kubeadm.k8s.io/v1beta2
 kind: ClusterConfiguration
@@ -158,7 +154,6 @@ etcd:
 imageRepository: k8s.gcr.io
 kubernetesVersion: v$KUBERNETES_VERSION
 networking:
-  #podNetworkCidr: 192.168.0.0/16
   dnsDomain: cluster.local
   podSubnet: 192.168.0.0/16
   serviceSubnet: 10.96.0.0/12
