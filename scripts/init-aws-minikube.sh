@@ -11,7 +11,7 @@ export DNS_NAME=${dns_name}
 export IP_ADDRESS=${ip_address}
 export CLUSTER_NAME=${cluster_name}
 export ADDONS="${addons}"
-export KUBERNETES_VERSION="1.20.1"
+export KUBERNETES_VERSION="1.20.2"
 
 # Set this only after setting the defaults
 set -o nounset
