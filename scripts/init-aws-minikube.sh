@@ -11,7 +11,7 @@ export DNS_NAME=${dns_name}
 export IP_ADDRESS=${ip_address}
 export CLUSTER_NAME=${cluster_name}
 export ADDONS="${addons}"
-export KUBERNETES_VERSION="1.20.4"
+export KUBERNETES_VERSION="1.21.0"
 
 # Set this only after setting the defaults
 set -o nounset
@@ -175,6 +175,9 @@ kubectl taint nodes --all node-role.kubernetes.io/master-
 
 # Allow load balancers to route to master
 kubectl label nodes --all node-role.kubernetes.io/master-
+
+# Allow loadbalancers to route to master nodes
+kubectl label nodes --all node.kubernetes.io/exclude-from-external-load-balancers-
 
 ########################################
 ########################################
