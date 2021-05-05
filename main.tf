@@ -196,6 +196,8 @@ resource "aws_instance" "minikube" {
 
   associate_public_ip_address = false
 
+  ipv6_address_count = "1"
+
   vpc_security_group_ids = [
     aws_security_group.minikube.id,
   ]

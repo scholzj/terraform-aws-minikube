@@ -81,6 +81,13 @@ systemctl restart containerd
 
 ########################################
 ########################################
+# IPv6
+########################################
+########################################
+sudo sysctl -w net.ipv6.conf.all.forwarding=1
+
+########################################
+########################################
 # Install Kubernetes components
 ########################################
 ########################################
@@ -155,9 +162,11 @@ imageRepository: k8s.gcr.io
 kubernetesVersion: v$KUBERNETES_VERSION
 networking:
   dnsDomain: cluster.local
-  podSubnet: 192.168.0.0/16
-  serviceSubnet: 10.96.0.0/12
+  podSubnet: 192.168.0.0/16,2600:1f18:44e4:f906::/64
+  serviceSubnet: 10.96.0.0/12,2600:1f18:44e4:f907::/108
 scheduler: {}
+featureGates:
+  IPv6DualStack: true
 ---
 EOF
 
