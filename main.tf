@@ -122,23 +122,9 @@ data "template_file" "init_minikube" {
   }
 }
 
-data "template_file" "cloud-init-config" {
-  template = file("${path.module}/scripts/cloud-init-config.yaml")
-
-  vars = {
-    calico_yaml = base64gzip(file("${path.module}/scripts/calico.yaml"))
-  }
-}
-
 data "template_cloudinit_config" "minikube_cloud_init" {
   gzip = true
   base64_encode = true
-
-  part {
-    filename = "cloud-init-config.yaml"
-    content_type = "text/cloud-config"
-    content = data.template_file.cloud-init-config.rendered
-  }
 
   part {
     filename = "init-aws-minikube.sh"
