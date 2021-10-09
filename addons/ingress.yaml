@@ -291,6 +291,7 @@ spec:
             - --publish-service=$(POD_NAMESPACE)/ingress-nginx
             - --annotations-prefix=nginx.ingress.kubernetes.io
             - --enable-ssl-passthrough
+            - --controller-class=k8s.io/ingress-nginx
           securityContext:
             capabilities:
                 drop:
@@ -333,3 +334,16 @@ spec:
             successThreshold: 1
             timeoutSeconds: 1
 ---
+
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  labels:
+    app: ingress-nginx
+  name: nginx
+  # Currently non-namespaced only
+  #namespace: ingress-nginx
+  annotations:
+    ingressclass.kubernetes.io/is-default-class: "true"
+spec:
+  controller: k8s.io/ingress-nginx
