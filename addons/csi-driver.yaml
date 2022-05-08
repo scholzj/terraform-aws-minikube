@@ -282,7 +282,7 @@ spec:
       priorityClassName: system-cluster-critical
       containers:
         - name: ebs-plugin
-          image: k8s.gcr.io/provider-aws/aws-ebs-csi-driver:v1.6.1
+          image: public.ecr.aws/ebs-csi-driver/aws-ebs-csi-driver:v1.6.1
           imagePullPolicy: IfNotPresent
           args:
             # - {all,controller,node} # specify the driver mode
@@ -427,7 +427,7 @@ spec:
         - name: ebs-plugin
           securityContext:
             privileged: true
-          image: k8s.gcr.io/provider-aws/aws-ebs-csi-driver:v1.6.1
+          image: public.ecr.aws/ebs-csi-driver/aws-ebs-csi-driver:v1.6.1
           imagePullPolicy: IfNotPresent
           args:
             - node
@@ -510,7 +510,6 @@ apiVersion: policy/v1beta1
 kind: PodDisruptionBudget
 metadata:
   name: ebs-csi-controller
-  namespace: kube-system
   labels:
     app.kubernetes.io/name: aws-ebs-csi-driver
 spec:
