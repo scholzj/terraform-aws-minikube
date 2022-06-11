@@ -61,17 +61,11 @@ resource "aws_security_group" "minikube" {
 # IAM role
 #####
 
-data "template_file" "policy_json" {
-  template = file("${path.module}/template/policy.json.tpl")
-
-  vars = {}
-}
-
 resource "aws_iam_policy" "minikube_policy" {
   name        = var.cluster_name
   path        = "/"
   description = "Policy for role ${var.cluster_name}"
-  policy      = data.template_file.policy_json.rendered
+  policy      = file("${path.module}/template/policy.json.tpl")
 }
 
 resource "aws_iam_role" "minikube_role" {
@@ -110,26 +104,14 @@ resource "aws_iam_instance_profile" "minikube_profile" {
 # Bootstraping scripts
 ##########
 
-data "template_file" "init_minikube" {
-  template = file("${path.module}/scripts/init-aws-minikube.sh")
-
-  vars = {
-    kubeadm_token = module.kubeadm-token.token
-    dns_name = "${var.cluster_name}.${var.hosted_zone}"
-    ip_address = aws_eip.minikube.public_ip
-    cluster_name = var.cluster_name
-    addons = join(" ", var.addons)
-  }
-}
-
-data "template_cloudinit_config" "minikube_cloud_init" {
+data "cloudinit_config" "minikube_cloud_init" {
   gzip = true
   base64_encode = true
 
   part {
     filename = "init-aws-minikube.sh"
     content_type = "text/x-shellscript"
-    content = data.template_file.init_minikube.rendered
+    content = templatefile("${path.module}/scripts/init-aws-minikube.sh", { kubeadm_token = module.kubeadm-token.token, dns_name = "${var.cluster_name}.${var.hosted_zone}", ip_address = aws_eip.minikube.public_ip, cluster_name = var.cluster_name, addons = join(" ", var.addons) } )
   }
 }
 
@@ -188,7 +170,7 @@ resource "aws_instance" "minikube" {
 
   iam_instance_profile = aws_iam_instance_profile.minikube_profile.name
 
-  user_data = data.template_cloudinit_config.minikube_cloud_init.rendered
+  user_data = data.cloudinit_config.minikube_cloud_init.rendered
 
   tags = merge(
     {

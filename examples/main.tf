@@ -13,6 +13,7 @@ module "minikube" {
   tags = {
     Application = "Minikube"
   }
+  
   addons = [
     "https://raw.githubusercontent.com/scholzj/terraform-aws-minikube/master/addons/storage-class.yaml",
     "https://raw.githubusercontent.com/scholzj/terraform-aws-minikube/master/addons/csi-driver.yaml",
