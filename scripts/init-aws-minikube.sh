@@ -64,6 +64,8 @@ sed -i 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.t
 systemctl restart containerd
 systemctl enable containerd
 
+sysctl -w net.ipv6.conf.all.forwarding=1
+
 ########################################
 ########################################
 # Install Kubernetes components
@@ -140,8 +142,8 @@ imageRepository: k8s.gcr.io
 kubernetesVersion: v$KUBERNETES_VERSION
 networking:
   dnsDomain: cluster.local
-  podSubnet: 192.168.0.0/16
-  serviceSubnet: 10.96.0.0/12
+  podSubnet: 192.168.0.0/16,2600:1f18:44e4:f906::/64
+  serviceSubnet: 10.96.0.0/12,2600:1f18:44e4:f907::/108
 scheduler: {}
 ---
 EOF
@@ -153,7 +155,7 @@ kubeadm init --config /tmp/kubeadm.yaml
 export KUBECONFIG=/etc/kubernetes/admin.conf
 
 # Install calico
-kubectl apply -f https://raw.githubusercontent.com/scholzj/terraform-aws-minikube/master/calico/calico.yaml
+kubectl apply -f https://raw.githubusercontent.com/scholzj/terraform-aws-minikube/master/calico/calico-ipv6.yaml
 
 # Allow all apps to run on master
 kubectl taint nodes --all node-role.kubernetes.io/master-
