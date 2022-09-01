@@ -8,14 +8,14 @@ AWS Minikube is a single node Kubernetes deployment in AWS. It creates EC2 host 
 - [Prerequisites and dependencies](#prerequisites-and-dependencies)
 - [Including the module](#including-the-module)
 - [Using custom AMI Image](#using-custom-ami-image)
-- [Add-ons](#addons)
-- [Custom add-ons](#custom-addons)
+- [Add-ons](#add-ons)
+- [Custom add-ons](#custom-add-ons)
 - [Tagging](#tagging)
 - [Kubernetes version](#kubernetes-version)
 
 <!-- /TOC -->
 
-## Updates
+## Updates
 
 * *26.8.2022* Update to Kubernetes 1.25.0 + Calico upgrade
 * *21.8.2022* Update to Kubernetes 1.24.4
@@ -29,7 +29,7 @@ AWS Minikube is a single node Kubernetes deployment in AWS. It creates EC2 host 
 * *29.12.2021* Update to Kubernetes 1.23.1
 * *11.12.2021* Update to Kubernetes 1.23.0
 
-## Prerequisites and dependencies
+## Prerequisites and dependencies
 
 * AWS Minikube deploys into existing VPC / public subnet. If you don't have your VPC / subnet yet, you can use [this](https://github.com/scholzj/aws-vpc) configuration or [this](https://github.com/scholzj/terraform-aws-vpc) module to create one.
   * The VPC / subnet should be properly linked with Internet Gateway (IGW) and should have DNS and DHCP enabled.
@@ -68,7 +68,7 @@ module "minikube" {
 
 An example of how to include this can be found in the [examples](examples/) dir. 
 
-## Using custom AMI Image
+## Using custom AMI Image
 
 AWS Minikube is built and tested on CentOS 7. But gives you the possibility to use their own AMI images. Your custom AMI image should be based on RPM distribution and should be similar to Cent OS 7. When `ami_image_id` variable is not specified, the latest available CentOS 7 image will be used.
 
