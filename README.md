@@ -11,6 +11,7 @@ AWS Minikube is a single node Kubernetes deployment in AWS. It creates EC2 host 
 - [Add-ons](#addons)
 - [Custom add-ons](#custom-addons)
 - [Tagging](#tagging)
+- [Kubernetes version](#kubernetes-version)
 
 <!-- /TOC -->
 
@@ -89,3 +90,7 @@ Custom add-ons can be added if needed. Fro every URL in the `addons` list, the i
 ## Tagging
 
 If you need to tag resources created by your Kubernetes cluster (EBS volumes, ELB load balancers etc.) check [this AWS Lambda function which can do the tagging](https://github.com/scholzj/aws-kubernetes-tagging-lambda).
+
+## Kubernetes version
+
+The intent for this module is to use it for development and testing against the latest version of Kubernetes. As such, the primary goal for this module is to ensure it works with whatever is the latest version of Kubernetes supported by Minikube. This includes provisioning the cluster as well as setting up networking and any of the [supported add-ons](#add-ons). This module might, but is not guaranteed to, also work with other versions of Kubernetes. At your own discretion, you can use the `kubernetes_version` variable to specify a different version of Kubernetes for the Minikube cluster.
