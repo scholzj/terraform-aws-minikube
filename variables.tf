@@ -57,5 +57,5 @@ variable "api_access_cidr" {
 
 variable "kubernetes_version" {
   description = "Kubernetes version of the Minikube cluster. Note, this module has only been tested to work with what is currently the latest version of Kubernetes (i.e. the default value for this variable). Specifying any other version might result in an error or a cluster that is not fully functional."
-  default     = "1.26.0"
+  default     = "1.26.1"
 }
