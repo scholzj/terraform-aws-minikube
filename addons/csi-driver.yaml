@@ -510,6 +510,7 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: ebs-csi-controller
+  namespace: kube-system
   labels:
     app.kubernetes.io/name: aws-ebs-csi-driver
 spec:
