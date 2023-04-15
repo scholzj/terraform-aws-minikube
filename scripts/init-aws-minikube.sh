@@ -109,7 +109,7 @@ nodeRegistration:
   imagePullPolicy: IfNotPresent
   kubeletExtraArgs:
     cgroup-driver: systemd
-    cloud-provider: aws
+    cloud-provider: external
     read-only-port: "10255"
   name: $FULL_HOSTNAME
   taints:
@@ -128,13 +128,13 @@ apiServer:
     - $LOCAL_IP_ADDRESS
     - $FULL_HOSTNAME
   extraArgs:
-    cloud-provider: aws
+    cloud-provider: external
   timeoutForControlPlane: 5m0s
 certificatesDir: /etc/kubernetes/pki
 clusterName: kubernetes
 controllerManager:
   extraArgs:
-    cloud-provider: aws
+    cloud-provider: external
 dns: {}
 etcd:
   local:
@@ -157,6 +157,18 @@ export KUBECONFIG=/etc/kubernetes/admin.conf
 # Install calico
 kubectl create -f https://raw.githubusercontent.com/scholzj/terraform-aws-minikube/master/calico/calico-operator.yaml
 kubectl create -f https://raw.githubusercontent.com/scholzj/terraform-aws-minikube/master/calico/calico-cr.yaml
+
+# Instal AWS Cloud Provider
+kubectl create -f https://raw.githubusercontent.com/scholzj/terraform-aws-minikube/master/aws-cloud-provider/aws-cloud-provider.yaml
+
+# Wait for the AWS Cloud Provider to be running
+while [[ $(kubectl get pod -l k8s-app=aws-cloud-controller-manager -n kube-system -o name | wc -c) -eq 0 ]]; do
+   echo "Waiting for cloud manager"
+   sleep 1
+done
+
+AWS_CLOUD_PROVIDER_POD=$(kubectl get pod -l k8s-app=aws-cloud-controller-manager -n kube-system -o name)
+kubectl wait $AWS_CLOUD_PROVIDER_POD -n kube-system --for=condition=Ready --timeout=300s
 
 # Allow all apps to run on master
 kubectl taint nodes --all node-role.kubernetes.io/master-
