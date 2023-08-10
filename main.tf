@@ -149,7 +149,7 @@ data "aws_ami" "centos7" {
 }
 
 resource "aws_eip" "minikube" {
-  vpc = true
+domain   = "vpc"
 }
 
 resource "aws_instance" "minikube" {
