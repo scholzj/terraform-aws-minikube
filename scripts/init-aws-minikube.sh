@@ -191,16 +191,16 @@ kubectl label nodes --all node.kubernetes.io/exclude-from-external-load-balancer
 kubectl create clusterrolebinding admin-cluster-binding --clusterrole=cluster-admin --user=admin
 
 # Prepare the kubectl config file for download to client (IP address)
-export KUBECONFIG_OUTPUT=/home/centos/kubeconfig_ip
+export KUBECONFIG_OUTPUT=/home/ec2-user/kubeconfig_ip
 kubeadm kubeconfig user --client-name admin --config /tmp/kubeadm.yaml > $KUBECONFIG_OUTPUT
-chown centos:centos $KUBECONFIG_OUTPUT
+chown ec2-user:ec2-user $KUBECONFIG_OUTPUT
 chmod 0600 $KUBECONFIG_OUTPUT
 
-cp /home/centos/kubeconfig_ip /home/centos/kubeconfig
-sed -i "s/server: https:\/\/.*:6443/server: https:\/\/$IP_ADDRESS:6443/g" /home/centos/kubeconfig_ip
-sed -i "s/server: https:\/\/.*:6443/server: https:\/\/$DNS_NAME:6443/g" /home/centos/kubeconfig
-chown centos:centos /home/centos/kubeconfig
-chmod 0600 /home/centos/kubeconfig
+cp /home/ec2-user/kubeconfig_ip /home/ec2-user/kubeconfig
+sed -i "s/server: https:\/\/.*:6443/server: https:\/\/$IP_ADDRESS:6443/g" /home/ec2-user/kubeconfig_ip
+sed -i "s/server: https:\/\/.*:6443/server: https:\/\/$DNS_NAME:6443/g" /home/ec2-user/kubeconfig
+chown ec2-user:ec2-user /home/ec2-user/kubeconfig
+chmod 0600 /home/ec2-user/kubeconfig
 
 ########################################
 ########################################
