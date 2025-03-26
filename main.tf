@@ -128,13 +128,13 @@ resource "aws_key_pair" "minikube_keypair" {
 # EC2 instance
 #####
 
-data "aws_ami" "centos7" {
+data "aws_ami" "amzn2_linux" {
   most_recent = true
-  owners = ["aws-marketplace"]
+  owners = ["125523088429"]
 
   filter {
-    name = "product-code"
-    values = ["aw0evgkw8e5c1q413zgy5pjce", "cvugziknvmxgqna9noibqnnsy"]
+    name = "name"
+    values = ["CentOS Stream 10 x86_64 202*"]
   }
 
   filter {
@@ -149,14 +149,14 @@ data "aws_ami" "centos7" {
 }
 
 resource "aws_eip" "minikube" {
-  vpc = true
+  domain = "vpc"
 }
 
 resource "aws_instance" "minikube" {
   # Instance type - any of the c4 should do for now
   instance_type = var.aws_instance_type
 
-  ami = length(var.ami_image_id) > 0 ? var.ami_image_id : data.aws_ami.centos7.id
+  ami = length(var.ami_image_id) > 0 ? var.ami_image_id : data.aws_ami.amzn2_linux.id
 
   key_name = aws_key_pair.minikube_keypair.key_name
 

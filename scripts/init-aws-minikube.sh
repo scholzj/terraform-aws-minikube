@@ -28,21 +28,30 @@ DNS_NAME=$(echo "$DNS_NAME" | tr 'A-Z' 'a-z')
 # Disable SELinux
 ########################################
 ########################################
-setenforce 0
-sed -i 's/^SELINUX=.*/SELINUX=disabled/' /etc/sysconfig/selinux
-sed -i 's/^SELINUX=.*/SELINUX=disabled/' /etc/selinux/config
+# setenforce 0
+# sed -i 's/^SELINUX=.*/SELINUX=disabled/' /etc/sysconfig/selinux
+# sed -i 's/^SELINUX=.*/SELINUX=disabled/' /etc/selinux/config
 
 ########################################
 ########################################
-# Install containerd
+# Install CRI-O
 ########################################
 ########################################
-cat <<EOF | tee /etc/modules-load.d/containerd.conf
-overlay
-br_netfilter
+cat <<EOF | tee /etc/yum.repos.d/cri-o.repo
+[cri-o]
+name=CRI-O
+baseurl=https://download.opensuse.org/repositories/isv:/cri-o:/stable:/v1.30/rpm/
+enabled=1
+gpgcheck=1
+gpgkey=https://download.opensuse.org/repositories/isv:/cri-o:/stable:/v1.30/rpm/repodata/repomd.xml.key
 EOF
 
-modprobe overlay
+dnf install -y container-selinux cri-o
+
+systemctl enable crio
+systemctl start crio
+
+swapoff -a
 modprobe br_netfilter
 
 # Setup required sysctl params, these persist across reboots.
@@ -55,14 +64,37 @@ EOF
 # Apply sysctl params without reboot
 sysctl --system
 
-yum install -y yum-utils curl gettext device-mapper-persistent-data lvm2
-yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-sudo yum install -y containerd.io
-mkdir -p /etc/containerd
-containerd config default > /etc/containerd/config.toml
-sed -i 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml
-systemctl restart containerd
-systemctl enable containerd
+########################################
+########################################
+# Install containerd
+########################################
+########################################
+# cat <<EOF | tee /etc/modules-load.d/containerd.conf
+# overlay
+# br_netfilter
+# EOF
+
+# modprobe overlay
+# modprobe br_netfilter
+
+# # Setup required sysctl params, these persist across reboots.
+# cat <<EOF | tee /etc/sysctl.d/99-kubernetes-cri.conf
+# net.bridge.bridge-nf-call-iptables  = 1
+# net.ipv4.ip_forward                 = 1
+# net.bridge.bridge-nf-call-ip6tables = 1
+# EOF
+
+# # Apply sysctl params without reboot
+# sysctl --system
+
+# yum install -y yum-utils curl gettext device-mapper-persistent-data lvm2
+# yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+# sudo yum install -y containerd.io
+# mkdir -p /etc/containerd
+# containerd config default > /etc/containerd/config.toml
+# sed -i 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml
+# systemctl restart containerd
+# systemctl enable containerd
 
 ########################################
 ########################################
@@ -76,10 +108,9 @@ baseurl=https://pkgs.k8s.io/core:/stable:/v1.30/rpm/
 enabled=1
 gpgcheck=1
 gpgkey=https://pkgs.k8s.io/core:/stable:/v1.30/rpm/repodata/repomd.xml.key
-exclude=kubelet kubeadm kubectl cri-tools kubernetes-cni
 EOF
 
-yum install -y kubectl kubelet-$KUBERNETES_VERSION kubeadm-$KUBERNETES_VERSION kubernetes-cni --disableexcludes=kubernetes
+yum install -y kubectl kubelet-$KUBERNETES_VERSION kubeadm-$KUBERNETES_VERSION kubernetes-cni
 
 # Start services
 systemctl enable kubelet
@@ -104,7 +135,7 @@ bootstrapTokens:
       - signing
       - authentication
 nodeRegistration:
-  criSocket: unix:///var/run/containerd/containerd.sock
+  criSocket: unix:///var/run/crio/crio.sock
   imagePullPolicy: IfNotPresent
   kubeletExtraArgs:
     cloud-provider: external
@@ -191,16 +222,16 @@ kubectl label nodes --all node.kubernetes.io/exclude-from-external-load-balancer
 kubectl create clusterrolebinding admin-cluster-binding --clusterrole=cluster-admin --user=admin
 
 # Prepare the kubectl config file for download to client (IP address)
-export KUBECONFIG_OUTPUT=/home/centos/kubeconfig_ip
+export KUBECONFIG_OUTPUT=/home/ec2-user/kubeconfig_ip
 kubeadm kubeconfig user --client-name admin --config /tmp/kubeadm.yaml > $KUBECONFIG_OUTPUT
-chown centos:centos $KUBECONFIG_OUTPUT
+chown ec2-user:ec2-user $KUBECONFIG_OUTPUT
 chmod 0600 $KUBECONFIG_OUTPUT
 
-cp /home/centos/kubeconfig_ip /home/centos/kubeconfig
-sed -i "s/server: https:\/\/.*:6443/server: https:\/\/$IP_ADDRESS:6443/g" /home/centos/kubeconfig_ip
-sed -i "s/server: https:\/\/.*:6443/server: https:\/\/$DNS_NAME:6443/g" /home/centos/kubeconfig
-chown centos:centos /home/centos/kubeconfig
-chmod 0600 /home/centos/kubeconfig
+cp /home/ec2-user/kubeconfig_ip /home/ec2-user/kubeconfig
+sed -i "s/server: https:\/\/.*:6443/server: https:\/\/$IP_ADDRESS:6443/g" /home/ec2-user/kubeconfig_ip
+sed -i "s/server: https:\/\/.*:6443/server: https:\/\/$DNS_NAME:6443/g" /home/ec2-user/kubeconfig
+chown ec2-user:ec2-user /home/ec2-user/kubeconfig
+chmod 0600 /home/ec2-user/kubeconfig
 
 ########################################
 ########################################
