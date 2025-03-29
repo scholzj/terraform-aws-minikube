@@ -40,10 +40,10 @@ DNS_NAME=$(echo "$DNS_NAME" | tr 'A-Z' 'a-z')
 cat <<EOF | tee /etc/yum.repos.d/cri-o.repo
 [cri-o]
 name=CRI-O
-baseurl=https://download.opensuse.org/repositories/isv:/cri-o:/stable:/v1.30/rpm/
+baseurl=https://download.opensuse.org/repositories/isv:/cri-o:/stable:/v1.32/rpm/
 enabled=1
 gpgcheck=1
-gpgkey=https://download.opensuse.org/repositories/isv:/cri-o:/stable:/v1.30/rpm/repodata/repomd.xml.key
+gpgkey=https://download.opensuse.org/repositories/isv:/cri-o:/stable:/v1.32/rpm/repodata/repomd.xml.key
 EOF
 
 dnf install -y container-selinux cri-o
@@ -104,10 +104,10 @@ sysctl --system
 sudo cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
 name=Kubernetes
-baseurl=https://pkgs.k8s.io/core:/stable:/v1.30/rpm/
+baseurl=https://pkgs.k8s.io/core:/stable:/v1.32/rpm/
 enabled=1
 gpgcheck=1
-gpgkey=https://pkgs.k8s.io/core:/stable:/v1.30/rpm/repodata/repomd.xml.key
+gpgkey=https://pkgs.k8s.io/core:/stable:/v1.32/rpm/repodata/repomd.xml.key
 EOF
 
 yum install -y kubectl kubelet-$KUBERNETES_VERSION kubeadm-$KUBERNETES_VERSION kubernetes-cni
@@ -124,7 +124,7 @@ systemctl start kubelet
 
 # Initialize the master
 cat >/tmp/kubeadm.yaml <<EOF
-apiVersion: kubeadm.k8s.io/v1beta3
+apiVersion: kubeadm.k8s.io/v1beta4
 kind: InitConfiguration
 bootstrapTokens:
   - groups:
@@ -138,8 +138,10 @@ nodeRegistration:
   criSocket: unix:///var/run/crio/crio.sock
   imagePullPolicy: IfNotPresent
   kubeletExtraArgs:
-    cloud-provider: external
-    read-only-port: "10255"
+    - name: cloud-provider
+      value: external
+    - name: read-only-port
+      value: "10255"
   name: $FULL_HOSTNAME
   taints:
     - effect: NoSchedule
@@ -148,7 +150,7 @@ localAPIEndpoint:
   advertiseAddress: $LOCAL_IP_ADDRESS
   bindPort: 6443
 ---
-apiVersion: kubeadm.k8s.io/v1beta3
+apiVersion: kubeadm.k8s.io/v1beta4
 kind: ClusterConfiguration
 apiServer:
   certSANs:
@@ -157,13 +159,19 @@ apiServer:
     - $LOCAL_IP_ADDRESS
     - $FULL_HOSTNAME
   extraArgs:
-    cloud-provider: external
+    - name: cloud-provider
+      value: external
+    - name: feature-gates
+      value: "ImageVolume=true,InPlacePodVerticalScaling=true"
   timeoutForControlPlane: 5m0s
 certificatesDir: /etc/kubernetes/pki
 clusterName: kubernetes
 controllerManager:
   extraArgs:
-    cloud-provider: external
+    - name: cloud-provider
+      value: external
+    - name: feature-gates
+      value: "ImageVolume=true,InPlacePodVerticalScaling=true"
 dns: {}
 etcd:
   local:
@@ -171,13 +179,21 @@ etcd:
 kubernetesVersion: v$KUBERNETES_VERSION
 networking:
   dnsDomain: cluster.local
-  podSubnet: 192.168.0.0/16
+  podSubnet: 172.16.0.0/16
   serviceSubnet: 10.96.0.0/12
-scheduler: {}
+scheduler:
+  extraArgs:
+    - name: feature-gates
+      value: "ImageVolume=true,InPlacePodVerticalScaling=true"
+certificateValidityPeriod: 87600h
+caCertificateValidityPeriod: 87600h
 ---
 kind: KubeletConfiguration
 apiVersion: kubelet.config.k8s.io/v1beta1
 cgroupDriver: systemd
+featureGates:
+  ImageVolume: true
+  InPlacePodVerticalScaling: true
 ---
 EOF
 
@@ -189,7 +205,17 @@ export KUBECONFIG=/etc/kubernetes/admin.conf
 
 # Install calico
 kubectl create -f https://raw.githubusercontent.com/scholzj/terraform-aws-minikube/master/calico/calico-operator.yaml
+sleep 1 # Allow CRDs to be created
 kubectl create -f https://raw.githubusercontent.com/scholzj/terraform-aws-minikube/master/calico/calico-cr.yaml
+
+# Allow all apps to run on master
+kubectl taint nodes --all node-role.kubernetes.io/master-
+
+# Allow load balancers to route to master
+kubectl label nodes --all node-role.kubernetes.io/master-
+
+# Allow loadbalancers to route to master nodes
+kubectl label nodes --all node.kubernetes.io/exclude-from-external-load-balancers-
 
 # Instal AWS Cloud Provider
 kubectl create -f https://raw.githubusercontent.com/scholzj/terraform-aws-minikube/master/aws-cloud-provider/aws-cloud-provider.yaml
@@ -202,15 +228,6 @@ done
 
 AWS_CLOUD_PROVIDER_POD=$(kubectl get pod -l k8s-app=aws-cloud-controller-manager -n kube-system -o name)
 kubectl wait $AWS_CLOUD_PROVIDER_POD -n kube-system --for=condition=Ready --timeout=300s
-
-# Allow all apps to run on master
-kubectl taint nodes --all node-role.kubernetes.io/master-
-
-# Allow load balancers to route to master
-kubectl label nodes --all node-role.kubernetes.io/master-
-
-# Allow loadbalancers to route to master nodes
-kubectl label nodes --all node.kubernetes.io/exclude-from-external-load-balancers-
 
 ########################################
 ########################################
