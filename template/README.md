@@ -1,0 +1,1 @@
+The policy template is based on https://cloud-provider-aws.sigs.k8s.io/prerequisites/. Only the Route53 rights are for External DNS.

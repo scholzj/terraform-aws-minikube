@@ -17,6 +17,7 @@ AWS Minikube is a single node Kubernetes deployment in AWS. It creates EC2 host 
 
 ## Updates
 
+* *7.4.2023* Update to Kube 1.32 and move from Calico to Flannel
 * *26.3.2023* Update to use CentOS 10 and CRI-O
 * *16.6.2024* Update to Kubernetes 1.30.2
 * *19.5.2024* Update to Kubernetes 1.30.1 + Ingress and External DNS add-on updates
@@ -66,7 +67,6 @@ module "minikube" {
 
   addons = [
     "https://raw.githubusercontent.com/scholzj/terraform-aws-minikube/master/addons/storage-class.yaml",
-    "https://raw.githubusercontent.com/scholzj/terraform-aws-minikube/master/addons/heapster.yaml",
     "https://raw.githubusercontent.com/scholzj/terraform-aws-minikube/master/addons/dashboard.yaml",
     "https://raw.githubusercontent.com/scholzj/terraform-aws-minikube/master/addons/external-dns.yaml"
   ]
@@ -92,7 +92,7 @@ The add-ons will be installed automatically based on the Terraform variables.
 
 ## Custom add-ons
 
-Custom add-ons can be added if needed. Fro every URL in the `addons` list, the initialization scripts will automatically call `kubectl -f apply <Addon URL>` to deploy it. Minikube is using RBAC. So the custom add-ons have to be *RBAC ready*.
+Custom add-ons can be added if needed. From every URL in the `addons` list, the initialization scripts will automatically call `kubectl -f apply <Addon URL>` to deploy it. Minikube is using RBAC. So the custom add-ons have to be *RBAC ready*.
 
 ## Tagging
 

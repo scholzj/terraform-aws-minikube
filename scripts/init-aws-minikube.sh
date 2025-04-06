@@ -66,38 +66,6 @@ sysctl --system
 
 ########################################
 ########################################
-# Install containerd
-########################################
-########################################
-# cat <<EOF | tee /etc/modules-load.d/containerd.conf
-# overlay
-# br_netfilter
-# EOF
-
-# modprobe overlay
-# modprobe br_netfilter
-
-# # Setup required sysctl params, these persist across reboots.
-# cat <<EOF | tee /etc/sysctl.d/99-kubernetes-cri.conf
-# net.bridge.bridge-nf-call-iptables  = 1
-# net.ipv4.ip_forward                 = 1
-# net.bridge.bridge-nf-call-ip6tables = 1
-# EOF
-
-# # Apply sysctl params without reboot
-# sysctl --system
-
-# yum install -y yum-utils curl gettext device-mapper-persistent-data lvm2
-# yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-# sudo yum install -y containerd.io
-# mkdir -p /etc/containerd
-# containerd config default > /etc/containerd/config.toml
-# sed -i 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml
-# systemctl restart containerd
-# systemctl enable containerd
-
-########################################
-########################################
 # Install Kubernetes components
 ########################################
 ########################################
@@ -115,6 +83,14 @@ yum install -y kubectl kubelet-$KUBERNETES_VERSION kubeadm-$KUBERNETES_VERSION k
 # Start services
 systemctl enable kubelet
 systemctl start kubelet
+
+########################################
+########################################
+# Install Helm
+########################################
+########################################
+
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
 ########################################
 ########################################
@@ -163,7 +139,6 @@ apiServer:
       value: external
     - name: feature-gates
       value: "ImageVolume=true,InPlacePodVerticalScaling=true"
-  timeoutForControlPlane: 5m0s
 certificatesDir: /etc/kubernetes/pki
 clusterName: kubernetes
 controllerManager:
@@ -185,8 +160,6 @@ scheduler:
   extraArgs:
     - name: feature-gates
       value: "ImageVolume=true,InPlacePodVerticalScaling=true"
-certificateValidityPeriod: 87600h
-caCertificateValidityPeriod: 87600h
 ---
 kind: KubeletConfiguration
 apiVersion: kubelet.config.k8s.io/v1beta1
@@ -203,11 +176,6 @@ kubeadm init --config /tmp/kubeadm.yaml
 # Use the local kubectl config for further kubectl operations
 export KUBECONFIG=/etc/kubernetes/admin.conf
 
-# Install calico
-kubectl create -f https://raw.githubusercontent.com/scholzj/terraform-aws-minikube/master/calico/calico-operator.yaml
-sleep 1 # Allow CRDs to be created
-kubectl create -f https://raw.githubusercontent.com/scholzj/terraform-aws-minikube/master/calico/calico-cr.yaml
-
 # Allow all apps to run on master
 kubectl taint nodes --all node-role.kubernetes.io/master-
 
@@ -217,17 +185,29 @@ kubectl label nodes --all node-role.kubernetes.io/master-
 # Allow loadbalancers to route to master nodes
 kubectl label nodes --all node.kubernetes.io/exclude-from-external-load-balancers-
 
-# Instal AWS Cloud Provider
+########################################
+########################################
+# Install Flannel networking
+########################################
+########################################
+kubectl create ns kube-flannel
+kubectl label --overwrite ns kube-flannel pod-security.kubernetes.io/enforce=privileged
+helm upgrade --install --repo https://flannel-io.github.io/flannel/ flannel --set podCidr="172.16.0.0/16" --namespace kube-flannel flannel
+
+########################################
+########################################
+# Install the AWS Cloud Provider and CSI driver
+########################################
+########################################
+
+# AWS Cloud provider
 kubectl create -f https://raw.githubusercontent.com/scholzj/terraform-aws-minikube/master/aws-cloud-provider/aws-cloud-provider.yaml
+# The Helm chart currently does not work due to outdated RBAC
+# helm install --repo https://kubernetes.github.io/cloud-provider-aws --set "image.tag=v1.32.1,args={--v=2,--cloud-provider=aws,--use-service-account-credentials=true,--configure-cloud-routes=false}" aws-cloud-controller-manager aws-cloud-controller-manager
+kubectl rollout status daemonset aws-cloud-controller-manager -n kube-system --timeout 300s
 
-# Wait for the AWS Cloud Provider to be running
-while [[ $(kubectl get pod -l k8s-app=aws-cloud-controller-manager -n kube-system -o name | wc -c) -eq 0 ]]; do
-   echo "Waiting for cloud manager"
-   sleep 1
-done
-
-AWS_CLOUD_PROVIDER_POD=$(kubectl get pod -l k8s-app=aws-cloud-controller-manager -n kube-system -o name)
-kubectl wait $AWS_CLOUD_PROVIDER_POD -n kube-system --for=condition=Ready --timeout=300s
+# AWS CSI Driver
+helm upgrade --install --repo https://kubernetes-sigs.github.io/aws-ebs-csi-driver --namespace kube-system aws-ebs-csi-driver aws-ebs-csi-driver
 
 ########################################
 ########################################
