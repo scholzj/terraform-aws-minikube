@@ -128,7 +128,7 @@ resource "aws_key_pair" "minikube_keypair" {
 # EC2 instance
 #####
 
-data "aws_ami" "amzn2_linux" {
+data "aws_ami" "centos_linux" {
   most_recent = true
   owners = ["125523088429"]
 
@@ -156,7 +156,7 @@ resource "aws_instance" "minikube" {
   # Instance type - any of the c4 should do for now
   instance_type = var.aws_instance_type
 
-  ami = length(var.ami_image_id) > 0 ? var.ami_image_id : data.aws_ami.amzn2_linux.id
+  ami = length(var.ami_image_id) > 0 ? var.ami_image_id : data.aws_ami.centos_linux.id
 
   key_name = aws_key_pair.minikube_keypair.key_name
 
