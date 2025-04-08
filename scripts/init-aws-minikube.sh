@@ -12,6 +12,9 @@ export IP_ADDRESS=${ip_address}
 export CLUSTER_NAME=${cluster_name}
 export ADDONS="${addons}"
 export KUBERNETES_VERSION="${kubernetes_version}"
+export KUBERNETES_REPO_VERSION="v1.32"
+export CRIO_VERSION="1.32.3"
+export CRIO_REPO_VERSION="v1.32"
 
 # Set this only after setting the defaults
 set -o nounset
@@ -40,13 +43,13 @@ DNS_NAME=$(echo "$DNS_NAME" | tr 'A-Z' 'a-z')
 cat <<EOF | tee /etc/yum.repos.d/cri-o.repo
 [cri-o]
 name=CRI-O
-baseurl=https://download.opensuse.org/repositories/isv:/cri-o:/stable:/v1.32/rpm/
+baseurl=https://download.opensuse.org/repositories/isv:/cri-o:/stable:/${CRIO_REPO_VERSION}/rpm/
 enabled=1
 gpgcheck=1
-gpgkey=https://download.opensuse.org/repositories/isv:/cri-o:/stable:/v1.32/rpm/repodata/repomd.xml.key
+gpgkey=https://download.opensuse.org/repositories/isv:/cri-o:/stable:/${CRIO_REPO_VERSION}/rpm/repodata/repomd.xml.key
 EOF
 
-dnf install -y container-selinux cri-o
+dnf install -y container-selinux cri-o-${CRIO_VERSION}
 
 systemctl enable crio
 systemctl start crio
@@ -72,10 +75,10 @@ sysctl --system
 sudo cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
 name=Kubernetes
-baseurl=https://pkgs.k8s.io/core:/stable:/v1.32/rpm/
+baseurl=https://pkgs.k8s.io/core:/stable:/${KUBERNETES_REPO_VERSION}/rpm/
 enabled=1
 gpgcheck=1
-gpgkey=https://pkgs.k8s.io/core:/stable:/v1.32/rpm/repodata/repomd.xml.key
+gpgkey=https://pkgs.k8s.io/core:/stable:/${KUBERNETES_REPO_VERSION}/rpm/repodata/repomd.xml.key
 EOF
 
 yum install -y kubectl kubelet-$KUBERNETES_VERSION kubeadm-$KUBERNETES_VERSION kubernetes-cni
