@@ -2,7 +2,7 @@
 
 # Install the Helm Chart
 helm upgrade --install --create-namespace --repo https://kubernetes-sigs.github.io/external-dns/ \
-        --set "provider.name=aws,interval=5m,txtOwnerId=${CLUSTER_NAME},image.tag=1.15.1" \
+        --set "provider.name=aws,interval=5m,txtOwnerId=${CLUSTER_NAME},env[0].name=AWS_DEFAULT_REGION,aws[0].value=${AWS_REGION}" \
         --namespace external-dns \
         external-dns external-dns
 
