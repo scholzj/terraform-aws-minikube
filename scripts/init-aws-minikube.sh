@@ -28,28 +28,19 @@ DNS_NAME=$(echo "$DNS_NAME" | tr 'A-Z' 'a-z')
 
 ########################################
 ########################################
-# Disable SELinux
-########################################
-########################################
-# setenforce 0
-# sed -i 's/^SELINUX=.*/SELINUX=disabled/' /etc/sysconfig/selinux
-# sed -i 's/^SELINUX=.*/SELINUX=disabled/' /etc/selinux/config
-
-########################################
-########################################
 # Install CRI-O
 ########################################
 ########################################
 cat <<EOF | tee /etc/yum.repos.d/cri-o.repo
 [cri-o]
 name=CRI-O
-baseurl=https://download.opensuse.org/repositories/isv:/cri-o:/stable:/${CRIO_REPO_VERSION}/rpm/
+baseurl=https://download.opensuse.org/repositories/isv:/cri-o:/stable:/$CRIO_REPO_VERSION/rpm/
 enabled=1
 gpgcheck=1
-gpgkey=https://download.opensuse.org/repositories/isv:/cri-o:/stable:/${CRIO_REPO_VERSION}/rpm/repodata/repomd.xml.key
+gpgkey=https://download.opensuse.org/repositories/isv:/cri-o:/stable:/$CRIO_REPO_VERSION/rpm/repodata/repomd.xml.key
 EOF
 
-dnf install -y container-selinux cri-o-${CRIO_VERSION}
+dnf install -y container-selinux cri-o-$CRIO_VERSION
 
 systemctl enable crio
 systemctl start crio
@@ -75,10 +66,10 @@ sysctl --system
 sudo cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
 name=Kubernetes
-baseurl=https://pkgs.k8s.io/core:/stable:/${KUBERNETES_REPO_VERSION}/rpm/
+baseurl=https://pkgs.k8s.io/core:/stable:/$KUBERNETES_REPO_VERSION/rpm/
 enabled=1
 gpgcheck=1
-gpgkey=https://pkgs.k8s.io/core:/stable:/${KUBERNETES_REPO_VERSION}/rpm/repodata/repomd.xml.key
+gpgkey=https://pkgs.k8s.io/core:/stable:/$KUBERNETES_REPO_VERSION/rpm/repodata/repomd.xml.key
 EOF
 
 yum install -y kubectl kubelet-$KUBERNETES_VERSION kubeadm-$KUBERNETES_VERSION kubernetes-cni
@@ -212,6 +203,52 @@ kubectl rollout status daemonset aws-cloud-controller-manager -n kube-system --t
 # AWS CSI Driver
 helm upgrade --install --repo https://kubernetes-sigs.github.io/aws-ebs-csi-driver --namespace kube-system aws-ebs-csi-driver aws-ebs-csi-driver
 
+# Create the Storage Class
+cat <<EOF | kubectl apply -f -
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: aws-gp3
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: ebs.csi.aws.com
+volumeBindingMode: WaitForFirstConsumer
+parameters:
+  type: gp3
+  encrypted: "true"
+  csi.storage.k8s.io/fstype: xfs
+reclaimPolicy: Delete
+allowVolumeExpansion: true
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: aws-gp2
+provisioner: ebs.csi.aws.com
+volumeBindingMode: WaitForFirstConsumer
+parameters:
+  type: gp2
+  encrypted: "true"
+  csi.storage.k8s.io/fstype: xfs
+reclaimPolicy: Delete
+allowVolumeExpansion: true
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: aws-st1
+provisioner: ebs.csi.aws.com
+volumeBindingMode: WaitForFirstConsumer
+parameters:
+  type: st1
+  encrypted: "true"
+  csi.storage.k8s.io/fstype: xfs
+reclaimPolicy: Delete
+allowVolumeExpansion: true
+---
+EOF
+
 ########################################
 ########################################
 # Create user and kubeconfig files
@@ -240,7 +277,5 @@ chmod 0600 /home/ec2-user/kubeconfig
 ########################################
 for ADDON in $ADDONS
 do
-  curl $ADDON | envsubst > /tmp/addon.yaml
-  kubectl apply -f /tmp/addon.yaml
-  rm /tmp/addon.yaml
+  curl $ADDON | envsubst | bash
 done

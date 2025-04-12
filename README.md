@@ -2,6 +2,8 @@
 
 AWS Minikube is a single node Kubernetes deployment in AWS. It creates EC2 host and deploys Kubernetes cluster using [Kubeadm](https://kubernetes.io/docs/admin/kubeadm/) tool. It provides full integration with AWS. It is able to handle ELB load balancers, EBS disks, Route53 domains etc.
 
+**This project is intended for short-lived development and testing. Not for production use.**
+
 <!-- TOC depthFrom:2 -->
 
 - [Updates](#updates)
@@ -10,13 +12,13 @@ AWS Minikube is a single node Kubernetes deployment in AWS. It creates EC2 host 
 - [Using custom AMI Image](#using-custom-ami-image)
 - [Add-ons](#add-ons)
 - [Custom add-ons](#custom-add-ons)
-- [Tagging](#tagging)
 - [Kubernetes version](#kubernetes-version)
 
 <!-- /TOC -->
 
 ## Updates
 
+* *13.4.2023* Update to OpenTofu and rework the addons
 * *7.4.2023* Update to Kube 1.32 and move from Calico to Flannel
 * *26.3.2023* Update to use CentOS 10 and CRI-O
 * *16.6.2024* Update to Kubernetes 1.30.2
@@ -42,7 +44,10 @@ AWS Minikube is a single node Kubernetes deployment in AWS. It creates EC2 host 
 * AWS Minikube deploys into existing VPC / public subnet. If you don't have your VPC / subnet yet, you can use [this](https://github.com/scholzj/aws-vpc) configuration or [this](https://github.com/scholzj/terraform-aws-vpc) module to create one.
   * The VPC / subnet should be properly linked with Internet Gateway (IGW) and should have DNS and DHCP enabled.
   * Hosted DNS zone configured in Route53 (in case the zone is private you have to use IP address to copy `kubeconfig` and access the cluster).
-* To deploy AWS Minikube there are no other dependencies apart from [Terraform](https://www.terraform.io). Kubeadm is used only on the EC2 host and doesn't have to be installed locally.
+
+This project is now developed and tested using [OpenTofu](https://opentofu.org/) and that should be also the only local dependency you need to deploy AWS Minikube.
+It should work also with [Terraform](https://www.terraform.io).
+Kubeadm is used only on the EC2 host and doesn't have to be installed locally.
 
 ## Including the module
 
@@ -66,9 +71,10 @@ module "minikube" {
   }
 
   addons = [
-    "https://raw.githubusercontent.com/scholzj/terraform-aws-minikube/master/addons/storage-class.yaml",
-    "https://raw.githubusercontent.com/scholzj/terraform-aws-minikube/master/addons/dashboard.yaml",
-    "https://raw.githubusercontent.com/scholzj/terraform-aws-minikube/master/addons/external-dns.yaml"
+      "https://raw.githubusercontent.com/scholzj/terraform-aws-minikube/master/addons/kubernetes-dashabord/init.sh",
+      "https://raw.githubusercontent.com/scholzj/terraform-aws-minikube/master/addons/kubernetes-metrics-server/init.sh",
+      "https://raw.githubusercontent.com/scholzj/terraform-aws-minikube/master/addons/external-dns/init.sh",
+      "https://raw.githubusercontent.com/scholzj/terraform-aws-minikube/master/addons/kubernetes-nginx-ingress/init.sh"
   ]
 }
 ```
@@ -82,21 +88,19 @@ AWS Minikube is built and tested on CentOS 10. But gives you the possibility to 
 ## Add-ons
 
 Currently, following add-ons are supported:
-* Kubernetes dashboard
-* Heapster for resource monitoring
-* Storage class and CSI driver for automatic provisioning of persistent volumes
-* External DNS (Replaces Route53 mapper)
-* Ingress
+* Kubernetes Dashboard
+* External DNS
+* Kubernetes Nginx Ingress Controller
+* Kubernetes Metrics Server
 
 The add-ons will be installed automatically based on the Terraform variables. 
 
 ## Custom add-ons
 
-Custom add-ons can be added if needed. From every URL in the `addons` list, the initialization scripts will automatically call `kubectl -f apply <Addon URL>` to deploy it. Minikube is using RBAC. So the custom add-ons have to be *RBAC ready*.
-
-## Tagging
-
-If you need to tag resources created by your Kubernetes cluster (EBS volumes, ELB load balancers etc.) check [this AWS Lambda function which can do the tagging](https://github.com/scholzj/aws-kubernetes-tagging-lambda).
+Custom add-ons can be added if needed.
+From every URL in the `addons` list, the initialization scripts will automatically run it using `bash` to deploy it.
+Minikube is using RBAC.
+So the custom add-ons have to be *RBAC ready*.
 
 ## Kubernetes version
 
