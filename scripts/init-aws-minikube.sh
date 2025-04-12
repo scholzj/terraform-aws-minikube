@@ -10,6 +10,7 @@ export KUBEADM_TOKEN=${kubeadm_token}
 export DNS_NAME=${dns_name}
 export IP_ADDRESS=${ip_address}
 export CLUSTER_NAME=${cluster_name}
+export AWS_REGION=${aws_region}
 export ADDONS="${addons}"
 export KUBERNETES_VERSION="${kubernetes_version}"
 export KUBERNETES_REPO_VERSION="v1.32"
