@@ -13,9 +13,9 @@ export CLUSTER_NAME=${cluster_name}
 export AWS_REGION=${aws_region}
 export ADDONS="${addons}"
 export KUBERNETES_VERSION="${kubernetes_version}"
-export KUBERNETES_REPO_VERSION="v1.32"
-export CRIO_VERSION="1.32.3"
-export CRIO_REPO_VERSION="v1.32"
+export KUBERNETES_REPO_VERSION="v1.33"
+export CRIO_VERSION="1.33.0"
+export CRIO_REPO_VERSION="v1.33"
 
 # Set this only after setting the defaults
 set -o nounset
@@ -130,8 +130,6 @@ apiServer:
     - $LOCAL_IP_ADDRESS
     - $FULL_HOSTNAME
   extraArgs:
-    - name: cloud-provider
-      value: external
     - name: feature-gates
       value: "ImageVolume=true,InPlacePodVerticalScaling=true"
 certificatesDir: /etc/kubernetes/pki
