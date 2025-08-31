@@ -13,7 +13,7 @@ export CLUSTER_NAME=${cluster_name}
 export AWS_REGION=${aws_region}
 export ADDONS="${addons}"
 export KUBERNETES_VERSION="${kubernetes_version}"
-export KUBERNETES_REPO_VERSION="v1.33"
+export KUBERNETES_REPO_VERSION="v1.34"
 export CRIO_VERSION="1.33.3"
 export CRIO_REPO_VERSION="v1.33"
 
