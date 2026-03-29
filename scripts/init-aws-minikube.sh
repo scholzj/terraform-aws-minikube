@@ -14,7 +14,7 @@ export AWS_REGION=${aws_region}
 export ADDONS="${addons}"
 export KUBERNETES_VERSION="${kubernetes_version}"
 export KUBERNETES_REPO_VERSION="v1.35"
-export CRIO_VERSION="1.35.0"
+export CRIO_VERSION="1.35.1"
 export CRIO_REPO_VERSION="v1.35"
 
 # Set this only after setting the defaults
